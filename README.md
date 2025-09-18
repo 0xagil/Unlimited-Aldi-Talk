@@ -123,6 +123,12 @@ This is the easiest way to run the script 24/7.
 
     You're all set! The script is now running in the background.
 
+**OR with Docker Compose:**
+
+```bash
+docker compose up
+```
+
 #### Option B: Run Locally with Python
 
 Use this method for testing or if you prefer not to use Docker.
@@ -298,6 +304,12 @@ Dies ist der einfachste Weg, das Skript rund um die Uhr laufen zu lassen.
     ```
 
     Fertig! Das Skript läuft jetzt im Hintergrund.
+
+**Oder mit Docker Compose:**
+
+```bash
+docker compose up
+```
 
 #### Option B: Lokal mit Python ausführen
 
