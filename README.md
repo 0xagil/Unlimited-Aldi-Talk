@@ -27,7 +27,7 @@
 -   **🤖 Automated Login:** Securely logs into your AldiTalk account.
 -   **🔄 Automatic Data Refresh:** Continuously calls the API to refresh your data allowance.
 -   **📊 Dynamic ID Fetching:** Automatically finds your `subscriptionId` and `offerId`.
--   **🔔 Telegram Notifications:** Get instant updates on successful refreshes, startups, and critical errors.
+-   **🔔 Optional Telegram Notifications:** Get instant updates on successful refreshes, startups, and critical errors (optional).
 -   **🐳 Dockerized:** Easy to deploy and run as a background service with Docker.
 -   **⚙️ Configurable:** Easily change settings like request intervals in a central `config.py` file.
 
@@ -63,11 +63,12 @@ The most important step is to configure your personal details using environment 
 
 2.  **Edit the `.env` file with your credentials:**
     ```bash
-    # --- AldiTalk Credentials ---
+    # --- AldiTalk Credentials (Required) ---
     ALDI_PHONE_NUMBER=your_aldi_phone_number
     ALDI_PASSWORD=your_aldi_password_here
 
-    # --- Telegram Bot Configuration ---
+    # --- Telegram Bot Configuration (Optional) ---
+    # Leave these empty or unset to disable Telegram notifications
     TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
     TELEGRAM_CHAT_ID=your_telegram_chat_id_here
 
@@ -79,11 +80,13 @@ The most important step is to configure your personal details using environment 
 3.  **Fill in your actual credentials:**
     - Replace `your_aldi_phone_number` with your actual AldiTalk phone number
     - Replace `your_aldi_password_here` with your actual AldiTalk password
-    - Replace `your_telegram_bot_token_here` with your Telegram bot token
-    - Replace `your_telegram_chat_id_here` with your Telegram chat ID
+    - **Optional:** Replace `your_telegram_bot_token_here` with your Telegram bot token (leave empty to disable notifications)
+    - **Optional:** Replace `your_telegram_chat_id_here` with your Telegram chat ID (leave empty to disable notifications)
     - Adjust the interval settings if needed (optional)
 
-#### How to get your Telegram credentials:
+#### How to get your Telegram credentials (Optional):
+
+If you want to receive Telegram notifications, follow these steps:
 
 -   **`TELEGRAM_BOT_TOKEN`**:
     1.  Open Telegram and search for the `@BotFather`.
@@ -94,6 +97,8 @@ The most important step is to configure your personal details using environment 
     1.  Search for the `@userinfobot`.
     2.  Start a chat and it will immediately give you your `Chat ID`.
     3.  Copy and paste it here.
+
+**Note:** If you don't set these variables or leave them empty, the script will still work but will only show notifications in the console logs instead of sending them via Telegram.
 
 ### Step 3: Run the Application
 
@@ -205,7 +210,7 @@ This script is for personal and educational use only. The developers are not res
 -   **🤖 Automatisierte Anmeldung:** Meldet sich sicher in deinem AldiTalk-Konto an.
 -   **🔄 Automatischer Daten-Refresh:** Ruft kontinuierlich die API auf, um dein Datenvolumen zu erneuern.
 -   **📊 Dynamisches Abrufen von IDs:** Findet automatisch deine `subscriptionId` und `offerId`.
--   **🔔 Telegram-Benachrichtigungen:** Erhalte sofortige Updates bei erfolgreichen Aktualisierungen, beim Start und bei kritischen Fehlern.
+-   **🔔 Optionale Telegram-Benachrichtigungen:** Erhalte sofortige Updates bei erfolgreichen Aktualisierungen, beim Start und bei kritischen Fehlern (optional).
 -   **🐳 Docker-fähig:** Einfach bereitzustellen und als Hintergrunddienst mit Docker auszuführen.
 -   **⚙️ Konfigurierbar:** Ändere einfach Einstellungen wie Anfrageintervalle in einer zentralen `config.py`-Datei.
 
@@ -241,11 +246,12 @@ Der wichtigste Schritt ist die Konfiguration deiner persönlichen Daten mit Umge
 
 2.  **Bearbeite die `.env`-Datei mit deinen Anmeldedaten:**
     ```bash
-    # --- AldiTalk Anmeldedaten ---
-    PHONE_NUMBER="DEINE_RUFNUMMER"    # Deine AldiTalk-Rufnummer
-    PASSWORD="DEIN_PASSWORT"          # Dein Passwort für das AldiTalk-Kundenportal
+    # --- AldiTalk Anmeldedaten (Erforderlich) ---
+    ALDI_PHONE_NUMBER="DEINE_RUFNUMMER"    # Deine AldiTalk-Rufnummer
+    ALDI_PASSWORD="DEIN_PASSWORT"          # Dein Passwort für das AldiTalk-Kundenportal
 
-    # --- Telegram Bot Konfiguration ---
+    # --- Telegram Bot Konfiguration (Optional) ---
+    # Lasse diese leer oder ungesetzt, um Telegram-Benachrichtigungen zu deaktivieren
     TELEGRAM_BOT_TOKEN="DEIN_TELEGRAM_BOT_TOKEN"
     TELEGRAM_CHAT_ID="DEINE_TELEGRAM_CHAT_ID"
 
@@ -254,7 +260,9 @@ Der wichtigste Schritt ist die Konfiguration deiner persönlichen Daten mit Umge
     PAGE_REFRESH_INTERVAL_MINUTES=2
     ```
 
-#### So erhältst du deine Telegram-Anmeldedaten:
+#### So erhältst du deine Telegram-Anmeldedaten (Optional):
+
+Falls du Telegram-Benachrichtigungen erhalten möchtest, folge diesen Schritten:
 
 -   **`TELEGRAM_BOT_TOKEN`**:
     1.  Öffne Telegram und suche nach dem `@BotFather`.
@@ -265,6 +273,8 @@ Der wichtigste Schritt ist die Konfiguration deiner persönlichen Daten mit Umge
     1.  Suche nach dem `@userinfobot`.
     2.  Starte einen Chat und er wird dir sofort deine `Chat ID` geben.
     3.  Kopiere sie und füge sie hier ein.
+
+**Hinweis:** Wenn du diese Variablen nicht setzt oder leer lässt, funktioniert das Skript trotzdem, zeigt aber Benachrichtigungen nur in den Konsolen-Logs an, anstatt sie über Telegram zu senden.
 
 ### Schritt 3: Anwendung ausführen
 

@@ -29,14 +29,22 @@ USER_DATA_URL = "https://www.alditalk-kundenportal.de/scs/bff/scs-207-customer-m
 class Notifier:
     """Handles sending notifications."""
     def __init__(self, bot_token, chat_id):
-        self.bot_token = bot_token
-        self.chat_id = chat_id
-        self.api_url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
+        # Check if Telegram is properly configured
+        self.enabled = bool(TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID and 
+                            "YOUR_TELEGRAM" not in str(TELEGRAM_BOT_TOKEN) and
+                            "YOUR_TELEGRAM" not in str(TELEGRAM_CHAT_ID))
+        
+        if not self.enabled:
+            print("[INFO] Telegram notifications disabled. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID to enable.")
+        else:
+            self.bot_token = bot_token
+            self.chat_id = chat_id
+            self.api_url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
 
     async def send_message(self, text):
         """Sends a message to the configured Telegram chat."""
-        if not self.bot_token or not self.chat_id or "YOUR_TELEGRAM" in self.bot_token:
-            print("[Notifier] Telegram credentials not configured. Skipping notification.")
+        if not self.enabled:
+            print(f"[Notifier] {text}")
             return
 
         payload = {
