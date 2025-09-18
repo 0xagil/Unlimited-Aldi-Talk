@@ -49,7 +49,7 @@ Follow these steps to get the AldiTalk Refresher up and running.
 Open your terminal and clone this repository to your local machine.
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/0xagil/Unlimited-Aldi-Talk
 cd AldiTalkRefresher
 ```
 
@@ -214,7 +214,7 @@ Befolge diese Schritte, um den AldiTalk Refresher in Betrieb zu nehmen.
 Öffne dein Terminal und klone dieses Repository auf deinen lokalen Rechner.
 
 ```bash
-git clone <deine-repository-url>
+git clone https://github.com/0xagil/Unlimited-Aldi-Talk
 cd AldiTalkRefresher
 ```
 
