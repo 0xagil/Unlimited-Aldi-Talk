@@ -25,6 +25,7 @@ SESSION_DIR = "session_data"
 IPHONE_DEVICE = "iPhone 11"
 API_URL = "https://www.alditalk-kundenportal.de:443/scs/bff/scs-209-selfcare-dashboard-bff/selfcare-dashboard/v1/offer/updateUnlimited"
 USER_DATA_URL = "https://www.alditalk-kundenportal.de/scs/bff/scs-207-customer-master-data-bff/customer-master-data/v1/navigation-list"
+USER_OFFERS_DATA_URL = lambda billingId, contractId: f"https://www.alditalk-kundenportal.de/scs/bff/scs-209-selfcare-dashboard-bff/selfcare-dashboard/v1/offers/{billingId}?warningDays=28&contractId={contractId}&productType=Mobile_Product_Offer"
 
 class Notifier:
     """Handles sending notifications."""
@@ -68,11 +69,11 @@ class AldiTalkRefresher:
         self.notifier = notifier
         self.gigabytes_counter = 0
         self.api_payload = {
-            "amount": "1048576",
+            "amount": "",
             "offerId": "",
-            "refillThresholdValue": "1048576",
+            "refillThresholdValue": "",
             "subscriptionId": "",
-            "updateOfferResourceID": "12",
+            "updateOfferResourceID": "",
         }
         self.api_headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:142.0) Gecko/20100101 Firefox/142.0",
@@ -136,14 +137,53 @@ class AldiTalkRefresher:
             if not subscriptions:
                 self._printer("No subscriptions found in user data.")
                 return False
+            elif len(subscriptions) > 1:
+                self._printer("[!!] Multiple subscriptions found, working with the first one!")
 
             subscription = subscriptions[0]
             self.api_payload["subscriptionId"] = subscription.get("contractId")
             self.api_payload["offerId"] = subscription.get("productId")
+            billingAccountId = subscription.get("billingAccountId", "")
 
             self._printer(f"Welcome, {user_details.get('firstName')} {user_details.get('lastName')}!")
             self._printer(f"Found Contract ID: {self.api_payload['subscriptionId']}")
             self._printer(f"Found Offer ID: {self.api_payload['offerId']}")
+            self._printer(f"Found Billing ID: {billingAccountId}")
+
+            # Load offers to get the resourceID
+            billingAccountWithC = billingAccountId.replace('B1', 'C-') # Those fuxking devs aaah 🤦🏼‍♂️
+            userOfferDataURL = USER_OFFERS_DATA_URL(billingAccountWithC, self.api_payload["subscriptionId"])
+            self._printer(f"Fetching more user data..")
+            response = await page.request.get(userOfferDataURL)
+            if not response.ok:
+                error_text = await response.text()
+                raise Exception(f"HTTP error {response.status} while fetching offers: {error_text}")
+            
+            response_data = await response.json()
+
+            balance = response_data.get('totalBalance', 0.0)
+            self._printer(f"[$] Your account balance: {balance}")
+
+            subscribedOffers = response_data.get('subscribedOffers', {})
+
+            if not subscribedOffers:
+                self._printer("No subscribedOffers found in user data.")
+                return False
+            elif len(subscribedOffers) > 1:
+                self._printer("[!!] Multiple subscribedOffers found, working with the first one!")
+
+            offer = subscribedOffers[0]
+
+            if not bool(offer.get('isOnDemandRefillApplicable', 0)):
+                self._printer(f"[X] Bad news, your contract does not allow refill. You need to have a contract with refills.")
+                # raise
+
+            self.api_payload['updateOfferResourceID'] = offer.get('resourceId')
+            self.api_payload['refillThresholdValue'] = offer.get('refillThresholdValueUid', 0)
+            self.api_payload['amount'] = offer.get('onDemandAmountValueUid', 0)
+
+            self._printer(f"Refill threshold is: {offer.get('refillThresholdValue', 0)}")
+            self._printer(f"Refill amount is: {offer.get('onDemandAmountValue', 0)}")
             self._printer("API payload updated with dynamic data.")
             return True
         except Exception as e:
