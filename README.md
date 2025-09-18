@@ -54,20 +54,34 @@ cd AldiTalkRefresher
 
 ### Step 2: Configure Your Credentials
 
-The most important step is to configure your personal details.
+The most important step is to configure your personal details using environment variables.
 
-1.  If it doesn't exist, create a `config.py` file.
-2.  Fill in the following details:
+1.  **Copy the example environment file:**
+    ```bash
+    cp .env.example .env
+    ```
 
-    ```python
+2.  **Edit the `.env` file with your credentials:**
+    ```bash
     # --- AldiTalk Credentials ---
-    PHONE_NUMBER = "YOUR_PHONE_NUMBER"  # Your AldiTalk mobile number
-    PASSWORD = "YOUR_PASSWORD"          # Your AldiTalk customer portal password
+    ALDI_PHONE_NUMBER=your_aldi_phone_number
+    ALDI_PASSWORD=your_aldi_password_here
 
     # --- Telegram Bot Configuration ---
-    TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
-    TELEGRAM_CHAT_ID = "YOUR_TELEGRAM_CHAT_ID"
+    TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+    TELEGRAM_CHAT_ID=your_telegram_chat_id_here
+
+    # --- Script Settings (Optional) ---
+    REQUEST_INTERVAL_SECONDS=5
+    PAGE_REFRESH_INTERVAL_MINUTES=2
     ```
+
+3.  **Fill in your actual credentials:**
+    - Replace `your_aldi_phone_number` with your actual AldiTalk phone number
+    - Replace `your_aldi_password_here` with your actual AldiTalk password
+    - Replace `your_telegram_bot_token_here` with your Telegram bot token
+    - Replace `your_telegram_chat_id_here` with your Telegram chat ID
+    - Adjust the interval settings if needed (optional)
 
 #### How to get your Telegram credentials:
 
@@ -99,7 +113,7 @@ This is the easiest way to run the script 24/7.
     This will start the container in the background.
 
     ```bash
-    docker run -d --name aldi-refresher alditalk-refresher
+    docker run -d --name aldi-refresher --env-file .env alditalk-refresher
     ```
 
     You're all set! The script is now running in the background.
@@ -218,19 +232,26 @@ cd AldiTalkRefresher
 
 ### Schritt 2: Anmeldedaten konfigurieren
 
-Der wichtigste Schritt ist die Konfiguration deiner persönlichen Daten.
+Der wichtigste Schritt ist die Konfiguration deiner persönlichen Daten mit Umgebungsvariablen.
 
-1.  Falls sie nicht existiert, erstelle eine `config.py`-Datei.
-2.  Fülle die folgenden Details aus:
+1.  **Kopiere die Beispiel-Umgebungsdatei:**
+    ```bash
+    cp .env.example .env
+    ```
 
-    ```python
+2.  **Bearbeite die `.env`-Datei mit deinen Anmeldedaten:**
+    ```bash
     # --- AldiTalk Anmeldedaten ---
-    PHONE_NUMBER = "DEINE_RUFNUMMER"  # Deine AldiTalk-Rufnummer
-    PASSWORD = "DEIN_PASSWORT"          # Dein Passwort für das AldiTalk-Kundenportal
+    PHONE_NUMBER="DEINE_RUFNUMMER"    # Deine AldiTalk-Rufnummer
+    PASSWORD="DEIN_PASSWORT"          # Dein Passwort für das AldiTalk-Kundenportal
 
     # --- Telegram Bot Konfiguration ---
-    TELEGRAM_BOT_TOKEN = "DEIN_TELEGRAM_BOT_TOKEN"
-    TELEGRAM_CHAT_ID = "DEINE_TELEGRAM_CHAT_ID"
+    TELEGRAM_BOT_TOKEN="DEIN_TELEGRAM_BOT_TOKEN"
+    TELEGRAM_CHAT_ID="DEINE_TELEGRAM_CHAT_ID"
+
+    # --- Script Konfiguration (Optional) ---
+    REQUEST_INTERVAL_SECONDS=5
+    PAGE_REFRESH_INTERVAL_MINUTES=2
     ```
 
 #### So erhältst du deine Telegram-Anmeldedaten:
@@ -263,7 +284,7 @@ Dies ist der einfachste Weg, das Skript rund um die Uhr laufen zu lassen.
     Dadurch wird der Container im Hintergrund gestartet.
 
     ```bash
-    docker run -d --name aldi-refresher alditalk-refresher
+    docker run -d --name aldi-refresher --env-file .env alditalk-refresher
     ```
 
     Fertig! Das Skript läuft jetzt im Hintergrund.
