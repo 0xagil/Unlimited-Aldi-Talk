@@ -1,0 +1,9 @@
+services:
+  alditalk-refresher:
+    build: .
+    container_name: alditalk_refresher
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./session_data:/app/session_data

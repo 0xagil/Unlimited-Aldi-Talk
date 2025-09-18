@@ -22,4 +22,4 @@ COPY . .
 
 # 6. Set the command to run the application
 # This will execute the main.py script when the container starts.
-CMD ["python", "main.py"]
+CMD ["python", "-u", "main.py"]
