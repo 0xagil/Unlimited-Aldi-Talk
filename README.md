@@ -29,7 +29,6 @@
 -   **📊 Dynamic ID Fetching:** Automatically finds your `subscriptionId` and `offerId`.
 -   **🔔 Telegram Notifications:** Get instant updates on successful refreshes, startups, and critical errors.
 -   **🐳 Dockerized:** Easy to deploy and run as a background service with Docker.
--   **🛡️ Stealth Mode:** Uses `playwright-stealth` to avoid bot detection.
 -   **⚙️ Configurable:** Easily change settings like request intervals in a central `config.py` file.
 
 ---
@@ -194,7 +193,6 @@ This script is for personal and educational use only. The developers are not res
 -   **📊 Dynamisches Abrufen von IDs:** Findet automatisch deine `subscriptionId` und `offerId`.
 -   **🔔 Telegram-Benachrichtigungen:** Erhalte sofortige Updates bei erfolgreichen Aktualisierungen, beim Start und bei kritischen Fehlern.
 -   **🐳 Docker-fähig:** Einfach bereitzustellen und als Hintergrunddienst mit Docker auszuführen.
--   **🛡️ Stealth-Modus:** Verwendet `playwright-stealth`, um Bot-Erkennung zu vermeiden.
 -   **⚙️ Konfigurierbar:** Ändere einfach Einstellungen wie Anfrageintervalle in einer zentralen `config.py`-Datei.
 
 ---
