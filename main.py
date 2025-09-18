@@ -1,6 +1,7 @@
 import asyncio
 import os
 import time
+from datetime import datetime
 import httpx
 from playwright.async_api import async_playwright
 
@@ -90,7 +91,8 @@ class AldiTalkRefresher:
 
     def _printer(self, text):
         """Custom print function with a prefix."""
-        prefix = f"[AldiTalkRefresher] {self.gigabytes_counter} GB >>"
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        prefix = f"[{timestamp}] [AldiTalkRefresher] {self.gigabytes_counter} GB >>"
         print(f"{prefix} {text}")
 
     async def _login(self, page):
