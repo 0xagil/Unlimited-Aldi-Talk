@@ -93,7 +93,12 @@ class AldiTalkRefresher:
                 self._printer("!!! PLEASE SET YOUR CREDENTIALS in config.py               !!!")
                 self._printer("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 return False
-
+            
+            try:
+                await page.locator('button[data-testid="uc-accept-all-button"]').click()
+            except:
+                pass  # Cookie banner not present
+            
             await page.locator('input[name="callback_2_od"]').fill(PHONE_NUMBER)
             await page.locator('input[name="callback_3_od"]').fill(PASSWORD)
             await page.locator('one-checkbox[name="loginRemember_od"]').click()
@@ -179,7 +184,7 @@ class AldiTalkRefresher:
                 SESSION_DIR,
                 headless=False,
                 args=[
-                    '--headless=new',
+                    #'--headless=new',
                     '--no-sandbox', # Required for Docker
                     '--disable-dev-shm-usage' # Required for Docker
                 ],
