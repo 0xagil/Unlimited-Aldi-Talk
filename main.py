@@ -184,7 +184,7 @@ class AldiTalkRefresher:
                 SESSION_DIR,
                 headless=False,
                 args=[
-                    #'--headless=new',
+                    '--headless=new',
                     '--no-sandbox', # Required for Docker
                     '--disable-dev-shm-usage' # Required for Docker
                 ],
