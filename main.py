@@ -64,7 +64,7 @@ class AldiTalkRefresher:
             "offerId": "",
             "refillThresholdValue": "1048576",
             "subscriptionId": "",
-            "updateOfferResourceID": "12",
+            "updateOfferResourceID": "",
         }
         self.api_headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:142.0) Gecko/20100101 Firefox/142.0",
@@ -132,6 +132,8 @@ class AldiTalkRefresher:
             subscription = subscriptions[0]
             self.api_payload["subscriptionId"] = subscription.get("contractId")
             self.api_payload["offerId"] = subscription.get("productId")
+            self.api_payload["updateOfferResourceID"] = subscription.get("resourceId")
+
 
             self._printer(f"Welcome, {user_details.get('firstName')} {user_details.get('lastName')}!")
             self._printer(f"Found Contract ID: {self.api_payload['subscriptionId']}")
@@ -203,10 +205,6 @@ class AldiTalkRefresher:
                 else:
                     self._printer("Already logged in.")
 
-                if not await self._fetch_user_data(page):
-                    await self.notifier.send_message("❌ Could not fetch user data. Exiting.")
-                    return
-
                 last_refresh_time = time.time()
                 self._printer("Starting the API request loop...")
                 await self.notifier.send_message("🚀 AldiTalk Refresher started successfully!")
@@ -217,7 +215,9 @@ class AldiTalkRefresher:
                         await page.reload(wait_until='domcontentloaded')
                         last_refresh_time = time.time()
                         self._printer("Page refreshed.")
-
+                    if not await self._fetch_user_data(page):
+                        await self.notifier.send_message("❌ Could not fetch user data. Exiting.")
+                        return
                     await self._refresh_data_volume(page)
                     await asyncio.sleep(REQUEST_INTERVAL_SECONDS)
 
