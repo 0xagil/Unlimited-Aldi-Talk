@@ -24,7 +24,8 @@ WEBSITE_URL = "https://www.alditalk-kundenportal.de/portal/auth/uebersicht/"
 SESSION_DIR = "session_data"
 IPHONE_DEVICE = "iPhone 11"
 API_URL = "https://www.alditalk-kundenportal.de:443/scs/bff/scs-209-selfcare-dashboard-bff/selfcare-dashboard/v1/offer/updateUnlimited"
-USER_DATA_URL = "https://www.alditalk-kundenportal.de/scs/bff/scs-207-customer-master-data-bff/customer-master-data/v1/navigation-list"
+USER_DATA_URL = "https://www.alditalk-kundenportal.de/scs/bff/scs-209-selfcare-dashboard-bff/selfcare-dashboard/v1/account-overview/content"
+CONTRACT_URL = "https://www.alditalk-kundenportal.de/scs/bff/scs-207-customer-master-data-bff/customer-master-data/v1/navigation-list"
 
 class Notifier:
     """Handles sending notifications."""
@@ -59,6 +60,7 @@ class AldiTalkRefresher:
     def __init__(self, notifier):
         self.notifier = notifier
         self.gigabytes_counter = 0
+        self.billing_account_id = ""
         self.api_payload = {
             "amount": "1048576",
             "offerId": "",
@@ -122,27 +124,41 @@ class AldiTalkRefresher:
             
             data = await response.json()
             
-            user_details = data.get("userDetails", {})
-            subscriptions = user_details.get("subscriptions", [])
+            account_details = data.get("accountDetails", {})
+            self.billingAccountId = account_details.get("billingAccountId", "")
+            customer_id = self.billingAccountId[-10:]
 
-            if not subscriptions:
-                self._printer("No subscriptions found in user data.")
-                return False
+            response = await page.request.get(CONTRACT_URL)
+            if not response.ok:
+                error_text = await response.text()
+                raise Exception(f"HTTP error {response.status} while fetching user data: {error_text}")
+            
+            data = await response.json()
 
+            subscriptions = data['userDetails'].get("subscriptions", [])
             for subscription in subscriptions:
-                if subscription.get("offerName") in ["Tarif L", "Tarif M", "Tarif S"]:
+                if subscription.get("offerName") in ["ALDI TALK Tarif L", "ALDI TALK Tarif M", "ALDI TALK Tarif S"]:
                     self.api_payload["subscriptionId"] = subscription.get("contractId")
                     self.api_payload["offerId"] = subscription.get("productId")
-                    self.api_payload["updateOfferResourceID"] = subscription.get("resourceId")
+                    break
 
-
-                    self._printer(f"Welcome, {user_details.get('firstName')} {user_details.get('lastName')}!")
-                    self._printer(f"Found Contract ID: {self.api_payload['subscriptionId']}")
-                    self._printer(f"Found Offer ID: {self.api_payload['offerId']}")
-                    self._printer("API payload updated with dynamic data.")
-                    return True
-            self._printer("No valid subscription found for user.")
-            return False
+            resourceIdUrl = f"https://www.alditalk-kundenportal.de/scs/bff/scs-209-selfcare-dashboard-bff/selfcare-dashboard/v1/offers/C-{customer_id}?contractId={self.api_payload['subscriptionId']}&productType=Mobile_Product_Offer"
+            try:
+                response = await page.request.get(resourceIdUrl)
+                if not response.ok:
+                    error_text = await response.text()
+                    raise Exception(f"HTTP error {response.status} while fetching user data: {error_text}")
+                data = await response.json()
+                for subscription in data.get("subscribedOffers", []):
+                    if subscription.get("offerId") == self.api_payload["offerId"]:
+                        self.api_payload["updateOfferResourceID"] = subscription.get("resourceId")
+                        self._printer("API payload updated with dynamic data.")
+                        return True
+                self._printer("No matching offer found to extract Resource ID.")
+                return False
+            except Exception as e:
+                self._printer(f"An error occurred while fetching resource ID: {e}")
+                return False
         except Exception as e:
             self._printer(f"An error occurred while fetching user data: {e}")
             return False
