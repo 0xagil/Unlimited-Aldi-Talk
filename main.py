@@ -3,6 +3,7 @@ import os
 import time
 import httpx
 from playwright.async_api import async_playwright
+from datetime import datetime, timezone, timedelta
 
 
 # --- Import Configuration ---
@@ -60,6 +61,7 @@ class AldiTalkRefresher:
     def __init__(self, notifier):
         self.notifier = notifier
         self.gigabytes_counter = 0
+        self.renewal_date = time.time() - 1000000  # Initialize to a past time
         self.billing_account_id = ""
         self.api_payload = {
             "amount": "1048576",
@@ -113,7 +115,7 @@ class AldiTalkRefresher:
             self._printer(f"Automatic login failed: {e}")
             return False
 
-    async def _fetch_user_data(self, page):
+    async def _fetch_user_data(self, page) -> tuple[bool, bool]:
         """Fetches user data and updates the API payload."""
         self._printer("Fetching user data...")
         try:
@@ -141,6 +143,9 @@ class AldiTalkRefresher:
                     self.api_payload["subscriptionId"] = subscription.get("contractId")
                     self.api_payload["offerId"] = subscription.get("productId")
                     break
+            if not self.api_payload["subscriptionId"]:
+                await self.notifier.send_message("❌ No valid subscription found. Please check your tariff.")
+                return True, False
 
             resourceIdUrl = f"https://www.alditalk-kundenportal.de/scs/bff/scs-209-selfcare-dashboard-bff/selfcare-dashboard/v1/offers/C-{customer_id}?contractId={self.api_payload['subscriptionId']}&productType=Mobile_Product_Offer"
             try:
@@ -152,16 +157,35 @@ class AldiTalkRefresher:
                 for subscription in data.get("subscribedOffers", []):
                     if subscription.get("offerId") == self.api_payload["offerId"]:
                         self.api_payload["updateOfferResourceID"] = subscription.get("resourceId")
+
+                        # --- Correctly parse the renewal date ---
+                        renewal_str = subscription.get("renewalDate", "")
+                        if renewal_str:
+                            # Parse the UTC string into a timezone-aware datetime object
+                            # The 'Z' (Zulu time) is replaced with +00:00 for ISO format compatibility
+                            renewal_date_obj = datetime.fromisoformat(renewal_str.replace('Z', '+00:00'))
+                            self.renewal_date = renewal_date_obj.timestamp()
+
+                            # --- Check if the plan is about to expire ---
+                            now_utc = datetime.now(timezone.utc)
+                            time_left = renewal_date_obj - now_utc
+
+                            self._printer(f"Plan renews in: {time_left}")
+
+                            # Notify if expiring within 24 hours
+                            if time_left < timedelta(days=1):
+                                await self.notifier.send_message(f"⚠️ Your AldiTalk plan will expire in less than 24 hours! ({time_left})")
+
                         self._printer("API payload updated with dynamic data.")
-                        return True
+                        return True, True
                 self._printer("No matching offer found to extract Resource ID.")
-                return False
+                return False, False
             except Exception as e:
                 self._printer(f"An error occurred while fetching resource ID: {e}")
-                return False
+                return False, False
         except Exception as e:
             self._printer(f"An error occurred while fetching user data: {e}")
-            return False
+            return False, False
 
     async def _refresh_data_volume(self, page):
         """Sends the API request to refresh the data volume."""
@@ -196,18 +220,16 @@ class AldiTalkRefresher:
                 os.makedirs(SESSION_DIR)
 
             self._printer("Launching browser...")
-            # Note: In Docker, Playwright runs headless by default. 
-            # The 'headless=True' and args are crucial for containerized environments.
             device_params = p.devices[IPHONE_DEVICE].copy()
             device_params.pop('default_browser_type', None)
             
             context = await p.chromium.launch_persistent_context(
                 SESSION_DIR,
-                headless=False,
+                headless=True,
                 args=[
                     '--headless=new',
-                    '--no-sandbox', # Required for Docker
-                    '--disable-dev-shm-usage' # Required for Docker
+                    '--no-sandbox',
+                    '--disable-dev-shm-usage'
                 ],
                 **device_params,
             )
@@ -224,20 +246,51 @@ class AldiTalkRefresher:
                 else:
                     self._printer("Already logged in.")
 
-                last_refresh_time = time.time()
-                self._printer("Starting the API request loop...")
+                # --- Initial Data Fetch ---
+                self._printer("Performing initial data fetch to check subscription status...")
+                success, subscribed = await self._fetch_user_data(page)
+                if not success:
+                    await self.notifier.send_message("❌ Could not fetch initial user data. Exiting.")
+                    return
+                
+                last_page_refresh_time = time.time()
                 await self.notifier.send_message("🚀 AldiTalk Refresher started successfully!")
+                if not subscribed:
+                     await self.notifier.send_message("🤔 No active subscription found. Will check periodically.")
 
+                # --- Main Loop ---
+                self._printer("Starting main loop...")
                 while True:
-                    if time.time() - last_refresh_time >= PAGE_REFRESH_INTERVAL_MINUTES * 60:
-                        self._printer("Refreshing the page to keep the session active...")
-                        await page.reload(wait_until='domcontentloaded')
-                        last_refresh_time = time.time()
-                        self._printer("Page refreshed.")
-                    if not await self._fetch_user_data(page):
-                        await self.notifier.send_message("❌ Could not fetch user data. Check your tariff.")
-                        return
-                    await self._refresh_data_volume(page)
+                    now = time.time()
+
+                    # --- State 1: Subscription is active, renewal date is in the future ---
+                    if subscribed and self.renewal_date > now:
+                        # Refresh page session if needed
+                        if now - last_page_refresh_time >= PAGE_REFRESH_INTERVAL_MINUTES * 60:
+                            self._printer("Refreshing page to keep session active...")
+                            await page.reload(wait_until='domcontentloaded')
+                            last_page_refresh_time = time.time()
+                            self._printer("Page refreshed.")
+                        
+                        # Refresh the data volume
+                        await self._refresh_data_volume(page)
+
+                    # --- State 2: No subscription or renewal date has passed ---
+                    else:
+                        if subscribed: # This means the renewal date just passed
+                            self._printer("Subscription has likely expired. Searching for a new one...")
+                            await self.notifier.send_message("⏳ Subscription expired. Looking for the new plan details.")
+                        
+                        # Attempt to find a new subscription
+                        success, subscribed = await self._fetch_user_data(page)
+                        if not success:
+                            self._printer("Could not fetch user data. Retrying after interval.")
+                        elif not subscribed:
+                            self._printer("Still no active subscription found. Retrying after interval.")
+                        else:
+                            self._printer("New subscription found! Resuming data refresh.")
+                            await self.notifier.send_message("✅ New subscription plan found! Resuming normal operation.")
+
                     await asyncio.sleep(REQUEST_INTERVAL_SECONDS)
 
             except Exception as e:
