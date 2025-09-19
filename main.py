@@ -98,12 +98,18 @@ class AldiTalkRefresher:
                 self._printer("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 return False
             
+            # Handle cookie banner with a timeout
+            await asyncio.sleep(5)  # Wait a moment for the banner to appear
             try:
-                await page.locator('button[data-testid="uc-accept-all-button"]').click()
-            except:
-                pass  # Cookie banner not present
-            
-            await page.locator('input[name="callback_2_od"]').fill(PHONE_NUMBER)
+                self._printer("Checking for cookie banner...")
+                await page.locator('button[data-testid="uc-accept-all-button"]').click(timeout=5000)
+                self._printer("Accepted cookies.")
+            except Exception:
+                self._printer("Cookie banner not found or already accepted.")
+                pass
+            await asyncio.sleep(2)  # Wait a moment after accepting cookies
+            username_input = page.locator('input[name="callback_2_od"]')
+            await username_input.fill(PHONE_NUMBER)
             await page.locator('input[name="callback_3_od"]').fill(PASSWORD)
             await page.locator('one-checkbox[name="loginRemember_od"]').click()
             await page.locator('one-button[id="IDToken5_4_od_2"]').click()
@@ -222,6 +228,8 @@ class AldiTalkRefresher:
             self._printer("Launching browser...")
             device_params = p.devices[IPHONE_DEVICE].copy()
             device_params.pop('default_browser_type', None)
+            # --- Set a consistent viewport to avoid layout shifts ---
+            device_params['viewport'] = {'width': 1920, 'height': 1080}
             
             context = await p.chromium.launch_persistent_context(
                 SESSION_DIR,
@@ -237,7 +245,7 @@ class AldiTalkRefresher:
 
             try:
                 self._printer(f"Navigating to {WEBSITE_URL}...")
-                await page.goto(WEBSITE_URL, timeout=60000, wait_until='networkidle')
+                await page.goto(WEBSITE_URL, timeout=60000, wait_until='domcontentloaded')
 
                 if "login" in page.url:
                     if not await self._login(page):
