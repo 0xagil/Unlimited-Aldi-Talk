@@ -129,17 +129,20 @@ class AldiTalkRefresher:
                 self._printer("No subscriptions found in user data.")
                 return False
 
-            subscription = subscriptions[0]
-            self.api_payload["subscriptionId"] = subscription.get("contractId")
-            self.api_payload["offerId"] = subscription.get("productId")
-            self.api_payload["updateOfferResourceID"] = subscription.get("resourceId")
+            for subscription in subscriptions:
+                if subscription.get("offerName") in ["Tarif L", "Tarif M", "Tarif S"]:
+                    self.api_payload["subscriptionId"] = subscription.get("contractId")
+                    self.api_payload["offerId"] = subscription.get("productId")
+                    self.api_payload["updateOfferResourceID"] = subscription.get("resourceId")
 
 
-            self._printer(f"Welcome, {user_details.get('firstName')} {user_details.get('lastName')}!")
-            self._printer(f"Found Contract ID: {self.api_payload['subscriptionId']}")
-            self._printer(f"Found Offer ID: {self.api_payload['offerId']}")
-            self._printer("API payload updated with dynamic data.")
-            return True
+                    self._printer(f"Welcome, {user_details.get('firstName')} {user_details.get('lastName')}!")
+                    self._printer(f"Found Contract ID: {self.api_payload['subscriptionId']}")
+                    self._printer(f"Found Offer ID: {self.api_payload['offerId']}")
+                    self._printer("API payload updated with dynamic data.")
+                    return True
+            self._printer("No valid subscription found for user.")
+            return False
         except Exception as e:
             self._printer(f"An error occurred while fetching user data: {e}")
             return False
@@ -216,7 +219,7 @@ class AldiTalkRefresher:
                         last_refresh_time = time.time()
                         self._printer("Page refreshed.")
                     if not await self._fetch_user_data(page):
-                        await self.notifier.send_message("❌ Could not fetch user data. Exiting.")
+                        await self.notifier.send_message("❌ Could not fetch user data. Check your tariff.")
                         return
                     await self._refresh_data_volume(page)
                     await asyncio.sleep(REQUEST_INTERVAL_SECONDS)
