@@ -228,12 +228,10 @@ class AldiTalkRefresher:
             self._printer("Launching browser...")
             device_params = p.devices[IPHONE_DEVICE].copy()
             device_params.pop('default_browser_type', None)
-            # --- Set a consistent viewport to avoid layout shifts ---
-            device_params['viewport'] = {'width': 1920, 'height': 1080}
             
             context = await p.chromium.launch_persistent_context(
                 SESSION_DIR,
-                headless=True,
+                headless=False,
                 args=[
                     '--headless=new',
                     '--no-sandbox',
