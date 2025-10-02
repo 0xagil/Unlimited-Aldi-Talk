@@ -12,6 +12,6 @@ TELEGRAM_CHAT_ID = "YOUR_TELEGRAM_CHAT_ID"
 
 # --- Script Settings ---
 # Time in seconds between each API request to refresh the data.
-REQUEST_INTERVAL_SECONDS = 15
+REQUEST_INTERVAL_SECONDS = 30
 # Time in minutes to refresh the browser page to keep the session alive.
-PAGE_REFRESH_INTERVAL_MINUTES = 2
+PAGE_REFRESH_INTERVAL_MINUTES = 3

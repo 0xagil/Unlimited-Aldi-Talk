@@ -243,7 +243,7 @@ class AldiTalkRefresher:
 
             try:
                 self._printer(f"Navigating to {WEBSITE_URL}...")
-                await page.goto(WEBSITE_URL, timeout=60000, wait_until='domcontentloaded')
+                await page.goto(WEBSITE_URL, timeout=60000, wait_until='networkidle')
 
                 if "login" in page.url:
                     if not await self._login(page):
